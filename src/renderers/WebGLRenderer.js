@@ -4306,6 +4306,10 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
+  THREE.clearTextureUnits = function() {
+		_usedTextureUnits = 0;
+  };
+
 	function setProgram( camera, lights, fog, material, object ) {
 
 		_usedTextureUnits = 0;
@@ -5183,6 +5187,7 @@ THREE.WebGLRenderer = function ( parameters ) {
 		}
 
 	}
+  THREE.loadUniformsGeneric = loadUniformsGeneric;
 
 	function setupMatrices ( object, camera ) {
 
