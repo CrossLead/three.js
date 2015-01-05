@@ -25644,8 +25644,8 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 			sprite.matrixWorld.decompose( spritePosition, spriteRotation, spriteScale );
 
-			scale[ 0 ] = spriteScale.x * 3;
-			scale[ 1 ] = spriteScale.y * 3;
+			scale[ 0 ] = spriteScale.x;
+			scale[ 1 ] = spriteScale.y;
 
 			var fogType = 0;
 
