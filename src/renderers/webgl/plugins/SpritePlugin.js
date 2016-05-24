@@ -96,11 +96,6 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 		// setup gl
 
-		state.initAttributes();
-		state.enableAttribute( attributes.position );
-		state.enableAttribute( attributes.uv );
-		state.disableUnusedAttributes();
-
 		state.disable( gl.CULL_FACE );
 		state.enable( gl.BLEND );
 
@@ -114,37 +109,43 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 		var fog = scene.fog;
 
     programs.forEach( function ( program ) {
+
 		  gl.useProgram( program.program );
 
-		  gl.enableVertexAttribArray( program.attributes.position );
-		  gl.enableVertexAttribArray( program.attributes.uv );
+      var attributes = program.attributes,
+          uniforms = program.uniforms;
 
-		  gl.vertexAttribPointer( program.attributes.position, 2, gl.FLOAT, false, 2 * 8, 0 );
-		  gl.vertexAttribPointer( program.attributes.uv, 2, gl.FLOAT, false, 2 * 8, 8 );
+      state.initAttributes();
+  		state.enableAttribute( attributes.position );
+  		state.enableAttribute( attributes.uv );
+  		state.disableUnusedAttributes();
+
+		  gl.vertexAttribPointer( attributes.position, 2, gl.FLOAT, false, 2 * 8, 0 );
+		  gl.vertexAttribPointer( attributes.uv, 2, gl.FLOAT, false, 2 * 8, 8 );
 
 
-		  gl.uniformMatrix4fv( program.uniforms.projectionMatrix, false, camera.projectionMatrix.elements );
+		  gl.uniformMatrix4fv( uniforms.projectionMatrix, false, camera.projectionMatrix.elements );
 
-		  gl.uniform1i( program.uniforms.map, 0 );
+		  gl.uniform1i( uniforms.map, 0 );
 
 		  if ( fog ) {
 
-			  gl.uniform3f( program.uniforms.fogColor, fog.color.r, fog.color.g, fog.color.b );
+			  gl.uniform3f( uniforms.fogColor, fog.color.r, fog.color.g, fog.color.b );
 
 			  if ( fog instanceof THREE.Fog ) {
 
-				  gl.uniform1f( program.uniforms.fogNear, fog.near );
-				  gl.uniform1f( program.uniforms.fogFar, fog.far );
+				  gl.uniform1f( uniforms.fogNear, fog.near );
+				  gl.uniform1f( uniforms.fogFar, fog.far );
 
-				  gl.uniform1i( program.uniforms.fogType, 1 );
+				  gl.uniform1i( uniforms.fogType, 1 );
 				  oldFogType = 1;
 				  sceneFogType = 1;
 
 			  } else if ( fog instanceof THREE.FogExp2 ) {
 
-				  gl.uniform1f( program.uniforms.fogDensity, fog.density );
+				  gl.uniform1f( uniforms.fogDensity, fog.density );
 
-				  gl.uniform1i( program.uniforms.fogType, 2 );
+				  gl.uniform1i( uniforms.fogType, 2 );
 				  oldFogType = 2;
 				  sceneFogType = 2;
 
@@ -152,7 +153,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 		  } else {
 
-			  gl.uniform1i( program.uniforms.fogType, 0 );
+			  gl.uniform1i( uniforms.fogType, 0 );
 			  oldFogType = 0;
 			  sceneFogType = 0;
 
@@ -230,7 +231,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 			state.setDepthTest( material.depthTest );
 			state.setDepthWrite( material.depthWrite );
 
-      if ( !fragmentUniforms ) {
+      if ( !materialProperties.uniformsList.length ) {
 
 			  if ( material.map ) {
 
