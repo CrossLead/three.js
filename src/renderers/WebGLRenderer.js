@@ -1715,6 +1715,12 @@ THREE.WebGLRenderer = function ( parameters ) {
 
 	}
 
+  THREE.clearTextureUnits = function() {
+
+    _usedTextureUnits = 0;
+
+  };
+
 	function setProgram( camera, fog, material, object ) {
 
 		_usedTextureUnits = 0;
