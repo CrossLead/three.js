@@ -22,16 +22,12 @@
 
 			#info {
 				color:#fff;
-
+				position: relative;
 				top: 0px;
-
-				position: absolute;
+				width: 100em;
+				margin: 0 auto -2.1em;
 				padding: 5px;
-				width: 500px;
-				z-index: 5;
-
-				left: 50px;
-
+				z-index:100;
 			}
 		</style>
 	</head>
@@ -40,24 +36,18 @@ Setup Number Focus Test Plates
 Use WEBGL Depth buffer support?
 -->
 	<body>
-		<script src="../build/three.min.js"></script>
-
+		<script src="../build/three.js"></script>
+		<script src="js/shaders/BokehShader2.js"></script>
 
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
-
 		<script src='js/libs/dat.gui.min.js'></script>
 
 		<div id="info">
-
-
-	<a href="http://threejs.org" target="_blank">three.js</a> - webgl realistic depth-of-field bokeh example<br/>
-	shader ported from <a href="http://blenderartists.org/forum/showthread.php?237488-GLSL-depth-of-field-with-bokeh-v2-4-(update)">Martins Upitis</a>
-
+			<a href="http://threejs.org" target="_blank">three.js</a> - webgl realistic depth-of-field bokeh example -
+			shader ported from <a href="http://blenderartists.org/forum/showthread.php?237488-GLSL-depth-of-field-with-bokeh-v2-4-(update)">Martins Upitis</a>
 		</div>
 
-
-		<script src="js/shaders/BokehShader2.js"></script>
 		<script>
 
 			if ( ! Detector.webgl ) Detector.addGetWebGLMessage();
@@ -65,8 +55,6 @@ Use WEBGL Depth buffer support?
 			var container, stats;
 			var camera, scene, renderer,
 				material_depth;
-
-			var mouseX = 0, mouseY = 0;
 
 			var windowHalfX = window.innerWidth / 2;
 			var windowHalfY = window.innerHeight / 2;
@@ -81,7 +69,8 @@ Use WEBGL Depth buffer support?
 			};
 
 			var singleMaterial = false;
-			var vector = new THREE.Vector3();
+			var mouse = new THREE.Vector2();
+			var raycaster = new THREE.Raycaster();
 			var distance = 100;
 			var target = new THREE.Vector3( 0, 20, -50 );
 			var effectController;
@@ -104,6 +93,7 @@ Use WEBGL Depth buffer support?
 				scene = new THREE.Scene();
 
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
+				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, height );
 				renderer.sortObjects = false;
 				container.appendChild( renderer.domElement );
@@ -120,7 +110,7 @@ Use WEBGL Depth buffer support?
 							 r + "posy.jpg", r + "negy.jpg",
 							 r + "posz.jpg", r + "negz.jpg" ];
 
-				var textureCube = THREE.ImageUtils.loadTextureCube( urls  );
+				var textureCube = new THREE.CubeTextureLoader().load( urls );
 				textureCube.format = THREE.RGBFormat;
 
 				// Skybox
@@ -271,9 +261,7 @@ Use WEBGL Depth buffer support?
 				renderer.domElement.style.left = "0px";
 
 				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				container.appendChild( stats.dom );
 
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 				document.addEventListener( 'touchstart', onDocumentTouchStart, false );
@@ -342,7 +330,7 @@ Use WEBGL Depth buffer support?
 				gui.add( effectController, "bias", 0,3, 0.001 ).onChange( matChanger );
 				gui.add( effectController, "fringe", 0, 5, 0.001 ).onChange( matChanger );
 
-				gui.add( effectController, "focalLength", 16, 80, 0.001 ).onChange( matChanger )
+				gui.add( effectController, "focalLength", 16, 80, 0.001 ).onChange( matChanger );
 
 				gui.add( effectController, "noise" ).onChange( matChanger );
 
@@ -370,8 +358,8 @@ Use WEBGL Depth buffer support?
 
 			function onDocumentMouseMove( event ) {
 
-				mouseX = event.clientX - windowHalfX;
-				mouseY = event.clientY - windowHalfY;
+				mouse.x = ( event.clientX - windowHalfX ) / windowHalfX;
+				mouse.y = - ( event.clientY - windowHalfY ) / windowHalfY;
 
 				postprocessing.bokeh_uniforms[ 'focusCoords' ].value.set(event.clientX / window.innerWidth, 1-event.clientY / window.innerHeight);
 
@@ -383,8 +371,8 @@ Use WEBGL Depth buffer support?
 
 					event.preventDefault();
 
-					mouseX = event.touches[ 0 ].pageX - windowHalfX;
-					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+					mouse.x = ( event.touches[ 0 ].pageX - windowHalfX ) / windowHalfX;
+					mouse.y = - ( event.touches[ 0 ].pageY - windowHalfY ) / windowHalfY;
 
 				}
 			}
@@ -395,8 +383,8 @@ Use WEBGL Depth buffer support?
 
 					event.preventDefault();
 
-					mouseX = event.touches[ 0 ].pageX - windowHalfX;
-					mouseY = event.touches[ 0 ].pageY - windowHalfY;
+					mouse.x = ( event.touches[ 0 ].pageX - windowHalfX ) / windowHalfX;
+					mouse.y = - ( event.touches[ 0 ].pageY - windowHalfY ) / windowHalfY;
 
 				}
 
@@ -421,8 +409,8 @@ Use WEBGL Depth buffer support?
 
 				postprocessing.bokeh_uniforms = THREE.UniformsUtils.clone( bokeh_shader.uniforms );
 
-				postprocessing.bokeh_uniforms[ "tColor" ].value = postprocessing.rtTextureColor;
-				postprocessing.bokeh_uniforms[ "tDepth" ].value = postprocessing.rtTextureDepth;
+				postprocessing.bokeh_uniforms[ "tColor" ].value = postprocessing.rtTextureColor.texture;
+				postprocessing.bokeh_uniforms[ "tDepth" ].value = postprocessing.rtTextureDepth.texture;
 
 				postprocessing.bokeh_uniforms[ "textureWidth" ].value = window.innerWidth;
 
@@ -489,12 +477,11 @@ Use WEBGL Depth buffer support?
 
 				camera.lookAt( target );
 
+				camera.updateMatrixWorld();
+
 				if ( effectController.jsDepthCalculation ) {
 
-					vector.set( mouseX / windowHalfX, -mouseY / windowHalfY, 1 );
-					vector.unproject( camera );
-
-					var raycaster = new THREE.Raycaster( camera.position, vector.sub( camera.position ).normalize() );
+					raycaster.setFromCamera( mouse, camera );
 
 					var intersects = raycaster.intersectObjects( scene.children, true );
 

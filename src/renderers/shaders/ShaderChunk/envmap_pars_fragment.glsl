@@ -1,19 +1,25 @@
+#if defined( USE_ENVMAP ) || defined( PHYSICAL )
+	uniform float reflectivity;
+	uniform float envMapIntenstiy;
+#endif
+
 #ifdef USE_ENVMAP
 
-	uniform float reflectivity;
-	uniform samplerCube envMap;
-	uniform float flipEnvMap;
-	uniform int combine;
+	#if ! defined( PHYSICAL ) && ( defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) )
+		varying vec3 vWorldPosition;
+	#endif
 
-	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )
-
-		uniform bool useRefract;
-		uniform float refractionRatio;
-
+	#ifdef ENVMAP_TYPE_CUBE
+		uniform samplerCube envMap;
 	#else
+		uniform sampler2D envMap;
+	#endif
+	uniform float flipEnvMap;
 
+	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG ) || defined( PHYSICAL )
+		uniform float refractionRatio;
+	#else
 		varying vec3 vReflect;
-
 	#endif
 
 #endif

@@ -18,23 +18,14 @@ Menubar.File = function ( editor ) {
 
 	// New
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'New' );
 	option.onClick( function () {
 
-		if ( confirm( 'Are you sure?' ) ) {
+		if ( confirm( 'Any unsaved data will be lost. Are you sure?' ) ) {
 
-			editor.config.setKey(
-				'camera/position', [ 500, 250, 500 ],
-				'camera/target', [ 0, 0, 0 ]
-			);
-
-			editor.storage.clear( function () {
-
-				location.href = location.pathname;
-
-			} );
+			editor.clear();
 
 		}
 
@@ -55,7 +46,7 @@ Menubar.File = function ( editor ) {
 
 	} );
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Import' );
 	option.onClick( function () {
@@ -71,7 +62,7 @@ Menubar.File = function ( editor ) {
 
 	// Export Geometry
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Export Geometry' );
 	option.onClick( function () {
@@ -95,17 +86,26 @@ Menubar.File = function ( editor ) {
 		}
 
 		var output = geometry.toJSON();
-		output = JSON.stringify( output, null, '\t' );
-		output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
 
-		exportString( output );
+		try {
+
+			output = JSON.stringify( output, null, '\t' );
+			output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
+
+		} catch ( e ) {
+
+			output = JSON.stringify( output );
+
+		}
+
+		saveString( output, 'geometry.json' );
 
 	} );
 	options.add( option );
 
 	// Export Object
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Export Object' );
 	option.onClick( function () {
@@ -120,33 +120,51 @@ Menubar.File = function ( editor ) {
 		}
 
 		var output = object.toJSON();
-		output = JSON.stringify( output, null, '\t' );
-		output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
 
-		exportString( output );
+		try {
+
+			output = JSON.stringify( output, null, '\t' );
+			output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
+
+		} catch ( e ) {
+
+			output = JSON.stringify( output );
+
+		}
+
+		saveString( output, 'model.json' );
 
 	} );
 	options.add( option );
 
 	// Export Scene
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Export Scene' );
 	option.onClick( function () {
 
 		var output = editor.scene.toJSON();
-		output = JSON.stringify( output, null, '\t' );
-		output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
 
-		exportString( output );
+		try {
+
+			output = JSON.stringify( output, null, '\t' );
+			output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
+
+		} catch ( e ) {
+
+			output = JSON.stringify( output );
+
+		}
+
+		saveString( output, 'scene.json' );
 
 	} );
 	options.add( option );
 
 	// Export OBJ
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Export OBJ' );
 	option.onClick( function () {
@@ -160,82 +178,121 @@ Menubar.File = function ( editor ) {
 
 		}
 
-		var geometry = object.geometry;
-
-		if ( geometry === undefined ) {
-
-			alert( 'The selected object doesn\'t have geometry.' );
-			return;
-
-		}
-
 		var exporter = new THREE.OBJExporter();
 
-		exportString( exporter.parse( geometry ) );
+		saveString( exporter.parse( object ), 'model.obj' );
 
 	} );
 	options.add( option );
 
 	// Export STL
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Export STL' );
 	option.onClick( function () {
 
 		var exporter = new THREE.STLExporter();
 
-		exportString( exporter.parse( editor.scene ) );
+		saveString( exporter.parse( editor.scene ), 'model.stl' );
 
 	} );
 	options.add( option );
 
-	/*
 	//
 
 	options.add( new UI.HorizontalRule() );
 
 	// Publish
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
 	option.setTextContent( 'Publish' );
 	option.onClick( function () {
 
-		alert( 'Not yet...' );
+		var zip = new JSZip();
+
+		//
+
+		var output = editor.toJSON();
+		output.metadata.type = 'App';
+		delete output.history;
+
+		output = JSON.stringify( output, null, '\t' );
+		output = output.replace( /[\n\t]+([\d\.e\-\[\]]+)/g, '$1' );
+
+		zip.file( 'app.json', output );
+
+		//
+
+		var manager = new THREE.LoadingManager( function () {
+
+			save( zip.generate( { type: 'blob' } ), 'download.zip' );
+
+		} );
+
+		var loader = new THREE.XHRLoader( manager );
+		loader.load( 'js/libs/app/index.html', function ( content ) {
+
+			zip.file( 'index.html', content );
+
+		} );
+		loader.load( 'js/libs/app.js', function ( content ) {
+
+			zip.file( 'js/app.js', content );
+
+		} );
+		loader.load( '../build/three.min.js', function ( content ) {
+
+			zip.file( 'js/three.min.js', content );
+
+		} );
 
 	} );
 	options.add( option );
-	*/
 
 	/*
-	// Test
+	// Publish (Dropbox)
 
-	var option = new UI.Panel();
+	var option = new UI.Row();
 	option.setClass( 'option' );
-	option.setTextContent( 'Test' );
+	option.setTextContent( 'Publish (Dropbox)' );
 	option.onClick( function () {
 
-		var text = new UI.Text( 'blah' );
-		editor.showDialog( text );
+		var parameters = {
+			files: [
+				{ 'url': 'data:text/plain;base64,' + window.btoa( "Hello, World" ), 'filename': 'app/test.txt' }
+			]
+		};
+
+		Dropbox.save( parameters );
 
 	} );
 	options.add( option );
 	*/
-
 
 
 	//
 
-	var exportString = function ( output ) {
+	var link = document.createElement( 'a' );
+	link.style.display = 'none';
+	document.body.appendChild( link ); // Firefox workaround, see #6594
 
-		var blob = new Blob( [ output ], { type: 'text/plain' } );
-		var objectURL = URL.createObjectURL( blob );
+	function save( blob, filename ) {
 
-		window.open( objectURL, '_blank' );
-		window.focus();
+		link.href = URL.createObjectURL( blob );
+		link.download = filename || 'data.json';
+		link.click();
 
-	};
+		// URL.revokeObjectURL( url ); breaks Firefox...
+
+	}
+
+	function saveString( text, filename ) {
+
+		save( new Blob( [ text ], { type: 'text/plain' } ), filename );
+
+	}
 
 	return container;
 

@@ -1,7 +1,3 @@
-﻿* {
-	vertical-align: middle;
-}
-
 body {
 	font-family: Helvetica, Arial, sans-serif;
 	font-size: 14px;
@@ -10,7 +6,7 @@ body {
 }
 
 hr {
-	border: 0px;
+	border: 0;
 	border-top: 1px solid #ccc;
 }
 
@@ -19,6 +15,7 @@ button {
 }
 
 textarea {
+	tab-size: 4;
 	white-space: pre;
 	word-wrap: normal;
 }
@@ -45,14 +42,14 @@ textarea, input { outline: none; } /* osx */
 }
 
 	.Panel.Collapsible .Static {
-		margin: 0px;
+		margin: 0;
 	}
 
 	.Panel.Collapsible .Static .Button {
 		float: left;
 		margin-right: 6px;
-		width: 0px;
-		height: 0px;
+		width: 0;
+		height: 0;
 		border: 6px solid transparent;
 	}
 
@@ -70,55 +67,123 @@ textarea, input { outline: none; } /* osx */
 		display: none;
 	}
 
-/* scene types */
+/* CodeMirror */
 
-.type {
+.CodeMirror {
+
+	position: absolute !important;
+	top: 37px;
+	width: 100% !important;
+	height: calc(100% - 37px) !important;
+
+}
+
+	.CodeMirror .errorLine {
+
+		background: rgba(255,0,0,0.25);
+
+	}
+
+	.CodeMirror .esprima-error {
+
+		color: #f00;
+		text-align: right;
+		padding: 0 20px;
+
+	}
+
+/* outliner */
+
+#outliner .option {
+
+	border: 1px solid transparent;
+}
+
+#outliner .option.drag {
+
+	border: 1px dashed #999;
+
+}
+
+#outliner .option.dragTop {
+
+	border-top: 1px dashed #999;
+
+}
+
+#outliner .option.dragBottom {
+
+	border-bottom: 1px dashed #999;
+
+}
+
+#outliner .type {
 	position:relative;
 	top:-2px;
-	padding: 0px 2px;
+	padding: 0 2px;
 	color: #ddd;
 }
-.type:after {
+
+#outliner .type:after {
 	content: '■';
 }
 
-.Scene {
+#outliner .Scene {
 	color: #ccccff;
 }
 
-.Object3D {
+#outliner .Object3D {
 	color: #aaaaee;
 }
 
-.Mesh {
+#outliner .Mesh {
 	color: #8888ee;
+}
+
+#outliner .Line {
+	color: #88ee88;
+}
+
+#outliner .LineSegments {
+	color: #88ee88;
+}
+
+#outliner .Points {
+	color: #ee8888;
 }
 
 /* */
 
-.PointLight {
+#outliner .PointLight {
 	color: #dddd00;
 }
 
 /* */
 
-.Geometry {
+#outliner .Geometry {
 	color: #88ff88;
 }
 
-.BoxGeometry {
+#outliner .BoxGeometry {
 	color: #bbeebb;
 }
-.TorusGeometry {
-	color: #aaeeaa;	
+
+#outliner .TorusGeometry {
+	color: #aaeeaa;
 }
 
 /* */
 
-.Material {
+#outliner .Material {
 	color: #ff8888;
 }
 
-.MeshPhongMaterial {
+#outliner .MeshPhongMaterial {
 	color: #ffaa88;
+}
+
+/* */
+
+#outliner .Script:after {
+	content: '{...}' /* ❮/❯ */
 }

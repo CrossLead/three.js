@@ -15,7 +15,7 @@
 	</head>
 	<body>
 
-		<script src="../build/three.min.js"></script>
+		<script src="../build/three.js"></script>
 
 		<script src="js/renderers/Projector.js"></script>
 		<script src="js/renderers/CanvasRenderer.js"></script>
@@ -140,7 +140,7 @@
 
 						particle = new THREE.Sprite( material );
 						particle.position.x = ix * separation - ( ( amountx * separation ) / 2 );
-						particle.position.y = -153
+						particle.position.y = -153;
 						particle.position.z = iy * separation - ( ( amounty * separation ) / 2 );
 						particle.scale.x = particle.scale.y = 2;
 						scene.add( particle );
@@ -151,13 +151,12 @@
 
 				renderer = new THREE.CanvasRenderer();
 				renderer.setClearColor( 0xf0f0f0 );
+				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
 				container.appendChild( renderer.domElement );
 
 				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				container.appendChild( stats.dom );
 
 				document.addEventListener( 'mousemove', onDocumentMouseMove, false );
 

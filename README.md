@@ -17,7 +17,7 @@ Alternatively see [how to build the library yourself](https://github.com/mrdoob/
 <script src="js/three.min.js"></script>
 ```
 
-This code creates a scene, a camera, and a geometric cube, and it adds the cube to the scene. It then creates a &lt;canvas&gt; renderer for the scene and camera, and it adds that viewport to the document.body element. Finally it animates the cube within the scene for the camera.
+This code creates a scene, a camera, and a geometric cube, and it adds the cube to the scene. It then creates a `WebGL` renderer for the scene and camera, and it adds that viewport to the document.body element. Finally it animates the cube within the scene for the camera.
 
 ```html
 <script>
@@ -61,7 +61,7 @@ This code creates a scene, a camera, and a geometric cube, and it adds the cube 
 
 </script>
 ```
-If everything went well you should see [this](http://jsfiddle.net/f17Lz5ux/).
+If everything went well you should see [this](http://jsfiddle.net/hfj7gm6t/).
 
 ### Change log ###
 

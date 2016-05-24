@@ -34,7 +34,7 @@
 		<div id="container"></div>
 		<div id="info"><a href="http://threejs.org" target="_blank">three.js</a> webgl - interactive - buffergeometry</div>
 
-		<script src="../build/three.min.js"></script>
+		<script src="../build/three.js"></script>
 
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
@@ -47,7 +47,7 @@
 
 			var camera, scene, renderer;
 
-			var raycaster, mouse, points = [];
+			var raycaster, mouse;
 
 			var mesh, line;
 
@@ -189,7 +189,7 @@
 				geometry.computeBoundingSphere();
 
 				var material = new THREE.MeshPhongMaterial( {
-						color: 0xaaaaaa, ambient: 0xaaaaaa, specular: 0xffffff, shininess: 250,
+						color: 0xaaaaaa, specular: 0xffffff, shininess: 250,
 						side: THREE.DoubleSide, vertexColors: THREE.VertexColors
 				} );
 
@@ -213,17 +213,15 @@
 				//
 
 				renderer = new THREE.WebGLRenderer( { antialias: false } );
-				renderer.setClearColor( scene.fog.color, 1 );
+				renderer.setClearColor( scene.fog.color );
+				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize( window.innerWidth, window.innerHeight );
-
 				container.appendChild( renderer.domElement );
 
 				//
 
 				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.top = '0px';
-				container.appendChild( stats.domElement );
+				container.appendChild( stats.dom );
 
 				//
 
@@ -268,9 +266,7 @@
 				mesh.rotation.x = time * 0.15;
 				mesh.rotation.y = time * 0.25;
 
-				var vector = new THREE.Vector3( mouse.x, mouse.y, 1 ).unproject( camera );
-
-				raycaster.set( camera.position, vector.sub( camera.position ).normalize() );
+				raycaster.setFromCamera( mouse, camera );
 
 				var intersects = raycaster.intersectObject( mesh );
 
@@ -288,7 +284,7 @@
 					linePosition.copyAt( 3, meshPosition, face.a );
 
 					mesh.updateMatrix();
-					
+
 					line.geometry.applyMatrix( mesh.matrix );
 
 					line.visible = true;

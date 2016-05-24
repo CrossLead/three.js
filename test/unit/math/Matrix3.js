@@ -124,6 +124,7 @@ test( "multiplyScalar", function() {
 	ok( b.elements[8] == 8*2 );
 });
 
+
 test( "determinant", function() {
 	var a = new THREE.Matrix3();
 	ok( a.determinant() == 1, "Passed!" );
@@ -141,14 +142,14 @@ test( "determinant", function() {
 
 
 test( "getInverse", function() {
-	var identity = new THREE.Matrix4();
-	var a = new THREE.Matrix4();
+	var identity = new THREE.Matrix3();
+	var identity4 = new THREE.Matrix4();
+	var a = new THREE.Matrix3();
 	var b = new THREE.Matrix3().set( 0, 0, 0, 0, 0, 0, 0, 0, 0 );
-	var c = new THREE.Matrix4().set( 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0 );
+	var c = new THREE.Matrix3().set( 0, 0, 0, 0, 0, 0, 0, 0, 0 );
 
-	ok( ! matrixEquals3( a, b ), "Passed!" );
 	b.getInverse( a, false );
-	ok( matrixEquals3( b, new THREE.Matrix3() ), "Passed!" );
+	ok( matrixEquals3( a, identity ), "Passed!" );
 
 	try { 
 		b.getInverse( c, true );
@@ -171,17 +172,19 @@ test( "getInverse", function() {
 
 	for( var i = 0, il = testMatrices.length; i < il; i ++ ) {
 		var m = testMatrices[i];
-		var mInverse3 = new THREE.Matrix3().getInverse( m );
+
+		a.setFromMatrix4( m );
+		var mInverse3 = b.getInverse( a );
 
 		var mInverse = toMatrix4( mInverse3 );
 
 		// the determinant of the inverse should be the reciprocal
-		ok( Math.abs( m.determinant() * mInverse3.determinant() - 1 ) < 0.0001, "Passed!" );
+		ok( Math.abs( a.determinant() * mInverse3.determinant() - 1 ) < 0.0001, "Passed!" );
 		ok( Math.abs( m.determinant() * mInverse.determinant() - 1 ) < 0.0001, "Passed!" );
 
 		var mProduct = new THREE.Matrix4().multiplyMatrices( m, mInverse );
 		ok( Math.abs( mProduct.determinant() - 1 ) < 0.0001, "Passed!" );
-		ok( matrixEquals3( mProduct, identity ), "Passed!" );
+		ok( matrixEquals3( mProduct, identity4 ), "Passed!" );
 	}
 });
 

@@ -38,8 +38,8 @@ THREE.GeometryUtils = {
 
 			var point = new THREE.Vector3();
 
-			var a = THREE.Math.random16();
-			var b = THREE.Math.random16();
+			var a = Math.random();
+			var b = Math.random();
 
 			if ( ( a + b ) > 1 ) {
 
@@ -72,7 +72,7 @@ THREE.GeometryUtils = {
 	// Get random point in face (triangle)
 	// (uniform distribution)
 
-	randomPointInFace: function ( face, geometry, useCachedAreas ) {
+	randomPointInFace: function ( face, geometry ) {
 
 		var vA, vB, vC;
 
@@ -98,7 +98,7 @@ THREE.GeometryUtils = {
 			il = faces.length,
 			totalArea = 0,
 			cumulativeAreas = [],
-			vA, vB, vC, vD;
+			vA, vB, vC;
 
 		// precompute face areas
 
@@ -148,7 +148,7 @@ THREE.GeometryUtils = {
 
 			}
 
-			var result = binarySearch( 0, cumulativeAreas.length - 1 )
+			var result = binarySearch( 0, cumulativeAreas.length - 1 );
 			return result;
 
 		}
@@ -162,11 +162,11 @@ THREE.GeometryUtils = {
 
 		for ( i = 0; i < n; i ++ ) {
 
-			r = THREE.Math.random16() * totalArea;
+			r = Math.random() * totalArea;
 
 			index = binarySearchIndices( r );
 
-			result[ i ] = THREE.GeometryUtils.randomPointInFace( faces[ index ], geometry, true );
+			result[ i ] = THREE.GeometryUtils.randomPointInFace( faces[ index ], geometry );
 
 			if ( ! stats[ index ] ) {
 
@@ -202,14 +202,15 @@ THREE.GeometryUtils = {
 
 		for ( i = 0; i < il; i ++ ) {
 
-			vA.set( vertices[i * 9 + 0], vertices[i * 9 + 1], vertices[i * 9 + 2] );
-			vB.set( vertices[i * 9 + 3], vertices[i * 9 + 4], vertices[i * 9 + 5] );
-			vC.set( vertices[i * 9 + 6], vertices[i * 9 + 7], vertices[i * 9 + 8] );
+			vA.set( vertices[ i * 9 + 0 ], vertices[ i * 9 + 1 ], vertices[ i * 9 + 2 ] );
+			vB.set( vertices[ i * 9 + 3 ], vertices[ i * 9 + 4 ], vertices[ i * 9 + 5 ] );
+			vC.set( vertices[ i * 9 + 6 ], vertices[ i * 9 + 7 ], vertices[ i * 9 + 8 ] );
 
 			area = THREE.GeometryUtils.triangleArea( vA, vB, vC );
 			totalArea += area;
 
-			cumulativeAreas.push(totalArea);
+			cumulativeAreas.push( totalArea );
+
 		}
 
 		// binary search cumulative areas array
@@ -242,7 +243,7 @@ THREE.GeometryUtils = {
 
 			}
 
-			var result = binarySearch( 0, cumulativeAreas.length - 1 )
+			var result = binarySearch( 0, cumulativeAreas.length - 1 );
 			return result;
 
 		}
@@ -254,14 +255,14 @@ THREE.GeometryUtils = {
 
 		for ( i = 0; i < n; i ++ ) {
 
-			r = THREE.Math.random16() * totalArea;
+			r = Math.random() * totalArea;
 
 			index = binarySearchIndices( r );
 
 			// result[ i ] = THREE.GeometryUtils.randomPointInFace( faces[ index ], geometry, true );
-			vA.set( vertices[index * 9 + 0], vertices[index * 9 + 1], vertices[index * 9 + 2] );
-			vB.set( vertices[index * 9 + 3], vertices[index * 9 + 4], vertices[index * 9 + 5] );
-			vC.set( vertices[index * 9 + 6], vertices[index * 9 + 7], vertices[index * 9 + 8] );
+			vA.set( vertices[ index * 9 + 0 ], vertices[ index * 9 + 1 ], vertices[ index * 9 + 2 ] );
+			vB.set( vertices[ index * 9 + 3 ], vertices[ index * 9 + 4 ], vertices[ index * 9 + 5 ] );
+			vC.set( vertices[ index * 9 + 6 ], vertices[ index * 9 + 7 ], vertices[ index * 9 + 8 ] );
 			result[ i ] = THREE.GeometryUtils.randomPointInTriangle( vA, vB, vC );
 
 		}

@@ -2,9 +2,10 @@
 <html lang="en">
 	<head>
 		<meta charset="utf-8" />
-		<script src="../../list.js"></script>
-		<script src="../../page.js"></script>
-		<link type="text/css" rel="stylesheet" href="../../page.css" />
+		<base href="../../" />
+		<script src="list.js"></script>
+		<script src="page.js"></script>
+		<link type="text/css" rel="stylesheet" href="page.css" />
 	</head>
 	<body>
 		<h1>[name]</h1>
@@ -20,7 +21,7 @@
 
 		<code>
 		// load a texture, set wrap mode to repeat
-		var texture = THREE.ImageUtils.loadTexture( "textures/water.jpg" );
+		var texture = new THREE.TextureLoader().load( "textures/water.jpg" );
 		texture.wrapS = THREE.RepeatWrapping;
 		texture.wrapT = THREE.RepeatWrapping;
 		texture.repeat.set( 4, 4 );
@@ -40,7 +41,7 @@
 
 		<h3>[property:object mapping]</h3>
 		<div>
-		How the image is applied to the object. An object type of THREE.UVMapping() is the default, where the U,V coordinates are used to apply the map, and a single texture is expected. The other types are THREE.CubeReflectionMapping, for cube maps used as a reflection map; THREE.CubeRefractionMapping, refraction mapping; THREE.SphericalReflectionMapping, a spherical reflection map projection; and THREE.SphericalRefractionMapping.
+		How the image is applied to the object. An object type of THREE.UVMapping is the default, where the U,V coordinates are used to apply the map, and a single texture is expected. The other types are THREE.CubeReflectionMapping, for cube maps used as a reflection map; THREE.CubeRefractionMapping, refraction mapping; and THREE.SphericalReflectionMapping, a spherical reflection map projection.
 		</div>
 
 		<h3>[property:number wrapS]</h3>
@@ -51,6 +52,10 @@
 		<h3>[property:number wrapT]</h3>
 		<div>
 		The default is THREE.ClampToEdgeWrapping, where the edge is clamped to the outer edge texels. The other two choices are THREE.RepeatWrapping and THREE.MirroredRepeatWrapping.
+		</div>
+
+		<div>
+		NOTE: tiling of images in textures only functions if image dimensions are powers of two (2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 2048, ...) in terms of pixels. Individual dimensions need not be equal, but each must be a power of two. This is a limitation of WebGL, not Three.js.
 		</div>
 
 		<h3>[property:number magFilter]</h3>
@@ -105,12 +110,12 @@
 
 		<h3>[property:boolean flipY]</h3>
 		<div>
-		False by default, set this to true if the texture needs to be flipped vertically.
+		True by default. Flips the image's Y axis to match the WebGL texture coordinate space.
 		</div>
 
 		<h3>[property:array mipmaps]</h3>
 		<div>
-		Array of mipmaps generated.
+		Array of user-specified mipmaps (optional).
 		</div>
 
 		<h3>[property:number unpackAlignment]</h3>
@@ -121,6 +126,11 @@
 		<h3>[property:boolean premultiplyAlpha]</h3>
 		<div>
 		False by default, which is the norm for PNG images. Set to true if the RGB values have been stored premultiplied by alpha.
+		</div>
+
+		<h3>[property:number encoding]</h3>
+		<div>
+		Set to THREE.LinearEncoding by default, but supports sRGB, RGBE, RGBM, RGBD, LogLuv and Gamma corrected encodings.  IMPORTANT: If this value is changed on a texture after the material has been used, it is necessary to trigger a Material.needsUpdate for this value to be realized in the shader.
 		</div>
 
 		<h3>[property:object onUpdate]</h3>

@@ -2,88 +2,303 @@
  * @author mrdoob / http://mrdoob.com/
  */
 
-var APP = {};
+var APP = {
 
-APP.Player = function () {
+	Player: function () {
 
-	var loader = new THREE.ObjectLoader();
-	var camera, scene, renderer;
-	var scripts;
-	
-	this.dom = undefined;
+		var scope = this;
 
-	this.load = function ( json ) {
+		var loader = new THREE.ObjectLoader();
+		var camera, scene, renderer;
 
-		renderer = new THREE.WebGLRenderer( { antialias: true } );
+		var vr, controls, effect;
 
-		scene = loader.parse( json );
+		var events = {};
 
-		/*
-		scripts = [];
+		this.dom = undefined;
 
-		scene.traverse( function ( child ) {
+		this.width = 500;
+		this.height = 500;
 
-			if ( child.script !== undefined ) {
+		this.load = function ( json ) {
 
-				var script = new Function( 'scene', 'time', child.script.source ).bind( child );
-				scripts.push( script );
+			vr = json.project.vr;
+
+			renderer = new THREE.WebGLRenderer( { antialias: true } );
+			renderer.setClearColor( 0x000000 );
+			renderer.setPixelRatio( window.devicePixelRatio );
+
+			if ( json.project.shadows ) {
+
+				renderer.shadowMap.enabled = true;
+				// renderer.shadowMap.type = THREE.PCFSoftShadowMap;
 
 			}
 
-		} );
-		*/
+			this.dom = renderer.domElement;
 
-		this.dom = renderer.domElement;
+			this.setScene( loader.parse( json.scene ) );
+			this.setCamera( loader.parse( json.camera ) );
 
-	};
+			events = {
+				init: [],
+				start: [],
+				stop: [],
+				keydown: [],
+				keyup: [],
+				mousedown: [],
+				mouseup: [],
+				mousemove: [],
+				touchstart: [],
+				touchend: [],
+				touchmove: [],
+				update: []
+			};
 
-	this.setCamera = function ( master ) {
+			var scriptWrapParams = 'player,renderer,scene,camera';
+			var scriptWrapResultObj = {};
 
-		camera = master.clone();
+			for ( var eventKey in events ) {
 
-	};
+				scriptWrapParams += ',' + eventKey;
+				scriptWrapResultObj[ eventKey ] = eventKey;
 
-	this.setSize = function ( width, height ) {
+			}
 
-		renderer.setSize( width, height );
+			var scriptWrapResult = JSON.stringify( scriptWrapResultObj ).replace( /\"/g, '' );
 
-	};
+			for ( var uuid in json.scripts ) {
 
-	var request;
+				var object = scene.getObjectByProperty( 'uuid', uuid, true );
 
-	var animate = function ( time ) {
+				if ( object === undefined ) {
 
-		request = requestAnimationFrame( animate );
+					console.warn( 'APP.Player: Script without object.', uuid );
+					continue;
 
-		/*
-		for ( var i = 0; i < scripts.length; i ++ ) {
+				}
 
-			scripts[ i ]( scene, time );
+				var scripts = json.scripts[ uuid ];
+
+				for ( var i = 0; i < scripts.length; i ++ ) {
+
+					var script = scripts[ i ];
+
+					var functions = ( new Function( scriptWrapParams, script.source + '\nreturn ' + scriptWrapResult + ';' ).bind( object ) )( this, renderer, scene, camera );
+
+					for ( var name in functions ) {
+
+						if ( functions[ name ] === undefined ) continue;
+
+						if ( events[ name ] === undefined ) {
+
+							console.warn( 'APP.Player: Event type not supported (', name, ')' );
+							continue;
+
+						}
+
+						events[ name ].push( functions[ name ].bind( object ) );
+
+					}
+
+				}
+
+			}
+
+			dispatch( events.init, arguments );
+
+		};
+
+		this.setCamera = function ( value ) {
+
+			camera = value;
+			camera.aspect = this.width / this.height;
+			camera.updateProjectionMatrix();
+
+			if ( vr === true ) {
+
+				if ( camera.parent === null ) {
+
+					// camera needs to be in the scene so camera2 matrix updates
+
+					scene.add( camera );
+
+				}
+
+				var camera2 = camera.clone();
+				camera.add( camera2 );
+
+				camera = camera2;
+
+				controls = new THREE.VRControls( camera );
+				effect = new THREE.VREffect( renderer );
+
+				document.addEventListener( 'keyup', function ( event ) {
+
+					switch ( event.keyCode ) {
+						case 90:
+							controls.zeroSensor();
+							break;
+					}
+
+				} );
+
+				this.dom.addEventListener( 'dblclick', function () {
+
+					effect.setFullScreen( true );
+
+				} );
+
+			}
+
+		};
+
+		this.setScene = function ( value ) {
+
+			scene = value;
+
+		};
+
+		this.setSize = function ( width, height ) {
+
+			if ( renderer._fullScreen ) return;
+
+			this.width = width;
+			this.height = height;
+
+			camera.aspect = this.width / this.height;
+			camera.updateProjectionMatrix();
+
+			renderer.setSize( width, height );
+
+		};
+
+		function dispatch( array, event ) {
+
+			for ( var i = 0, l = array.length; i < l; i ++ ) {
+
+				array[ i ]( event );
+
+			}
 
 		}
-		*/
 
-		renderer.render( scene, camera );
+		var prevTime, request;
 
-	};
+		function animate( time ) {
 
-	this.play = function () {
+			request = requestAnimationFrame( animate );
 
-		request = requestAnimationFrame( animate );
+			try {
 
-	};
+				dispatch( events.update, { time: time, delta: time - prevTime } );
 
-	this.stop = function () {
+			} catch ( e ) {
 
-		cancelAnimationFrame( request );
+				console.error( ( e.message || e ), ( e.stack || "" ) );
 
-	};
+			}
 
-};
+			if ( vr === true ) {
 
-APP.Script = function ( source ) {
+				controls.update();
+				effect.render( scene, camera );
 
-	this.uuid = THREE.Math.generateUUID();
-	this.source = source;
+			} else {
+
+				renderer.render( scene, camera );
+
+			}
+
+			prevTime = time;
+
+		}
+
+		this.play = function () {
+
+			document.addEventListener( 'keydown', onDocumentKeyDown );
+			document.addEventListener( 'keyup', onDocumentKeyUp );
+			document.addEventListener( 'mousedown', onDocumentMouseDown );
+			document.addEventListener( 'mouseup', onDocumentMouseUp );
+			document.addEventListener( 'mousemove', onDocumentMouseMove );
+			document.addEventListener( 'touchstart', onDocumentTouchStart );
+			document.addEventListener( 'touchend', onDocumentTouchEnd );
+			document.addEventListener( 'touchmove', onDocumentTouchMove );
+
+			dispatch( events.start, arguments );
+
+			request = requestAnimationFrame( animate );
+			prevTime = performance.now();
+
+		};
+
+		this.stop = function () {
+
+			document.removeEventListener( 'keydown', onDocumentKeyDown );
+			document.removeEventListener( 'keyup', onDocumentKeyUp );
+			document.removeEventListener( 'mousedown', onDocumentMouseDown );
+			document.removeEventListener( 'mouseup', onDocumentMouseUp );
+			document.removeEventListener( 'mousemove', onDocumentMouseMove );
+			document.removeEventListener( 'touchstart', onDocumentTouchStart );
+			document.removeEventListener( 'touchend', onDocumentTouchEnd );
+			document.removeEventListener( 'touchmove', onDocumentTouchMove );
+
+			dispatch( events.stop, arguments );
+
+			cancelAnimationFrame( request );
+
+		};
+
+		//
+
+		function onDocumentKeyDown( event ) {
+
+			dispatch( events.keydown, event );
+
+		}
+
+		function onDocumentKeyUp( event ) {
+
+			dispatch( events.keyup, event );
+
+		}
+
+		function onDocumentMouseDown( event ) {
+
+			dispatch( events.mousedown, event );
+
+		}
+
+		function onDocumentMouseUp( event ) {
+
+			dispatch( events.mouseup, event );
+
+		}
+
+		function onDocumentMouseMove( event ) {
+
+			dispatch( events.mousemove, event );
+
+		}
+
+		function onDocumentTouchStart( event ) {
+
+			dispatch( events.touchstart, event );
+
+		}
+
+		function onDocumentTouchEnd( event ) {
+
+			dispatch( events.touchend, event );
+
+		}
+
+		function onDocumentTouchMove( event ) {
+
+			dispatch( events.touchmove, event );
+
+		}
+
+	}
 
 };

@@ -1,18 +1,25 @@
-#if defined( USE_ENVMAP ) && ! defined( USE_BUMPMAP ) && ! defined( USE_NORMALMAP ) && ! defined( PHONG )
+#ifdef USE_ENVMAP
 
-	vec3 worldNormal = mat3( modelMatrix[ 0 ].xyz, modelMatrix[ 1 ].xyz, modelMatrix[ 2 ].xyz ) * objectNormal;
-	worldNormal = normalize( worldNormal );
+	#if defined( USE_BUMPMAP ) || defined( USE_NORMALMAP ) || defined( PHONG )
 
-	vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );
+		vWorldPosition = worldPosition.xyz;
 
-	if ( useRefract ) {
+	#else
 
-		vReflect = refract( cameraToVertex, worldNormal, refractionRatio );
+		vec3 cameraToVertex = normalize( worldPosition.xyz - cameraPosition );
 
-	} else {
+		vec3 worldNormal = inverseTransformDirection( transformedNormal, viewMatrix );
 
-		vReflect = reflect( cameraToVertex, worldNormal );
+		#ifdef ENVMAP_MODE_REFLECTION
 
-	}
+			vReflect = reflect( cameraToVertex, worldNormal );
+
+		#else
+
+			vReflect = refract( cameraToVertex, worldNormal, refractionRatio );
+
+		#endif
+
+	#endif
 
 #endif

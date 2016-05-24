@@ -167,7 +167,7 @@ test( "getInverse", function() {
 	b.getInverse( a, false );
 	ok( matrixEquals4( b, new THREE.Matrix4() ), "Passed!" );
 
-	try { 
+	try {
 		b.getInverse( c, true );
 		ok( false, "Passed!" ); // should never get here.
 	}
@@ -211,6 +211,35 @@ test( "getInverse", function() {
 	}
 });
 
+test( "makeBasis/extractBasis", function() {
+	var identityBasis = [ new THREE.Vector3( 1, 0, 0 ), new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( 0, 0, 1 ) ];
+	var a = new THREE.Matrix4().makeBasis( identityBasis[0], identityBasis[1], identityBasis[2] );
+	var identity = new THREE.Matrix4();
+	ok( matrixEquals4( a, identity ), "Passed!" );
+
+	var testBases = [ [ new THREE.Vector3( 0, 1, 0 ), new THREE.Vector3( -1, 0, 0 ), new THREE.Vector3( 0, 0, 1 ) ] ]
+	for( var i = 0; i < testBases.length; i ++ ) {
+		var testBasis = testBases[i];
+		var b = new THREE.Matrix4().makeBasis( testBasis[0], testBasis[1], testBasis[2] );
+		var outBasis = [ new THREE.Vector3(), new THREE.Vector3(), new THREE.Vector3() ];
+		b.extractBasis( outBasis[0], outBasis[1], outBasis[2] );
+		// check what goes in, is what comes out.
+		for( var j = 0; j < outBasis.length; j ++ ) {
+			ok( outBasis[j].equals( testBasis[j] ), "Passed!" );
+		}
+
+		// get the basis out the hard war
+		for( var j = 0; j < identityBasis.length; j ++ ) {
+			outBasis[j].copy( identityBasis[j] );
+			outBasis[j].applyMatrix4( b );
+		}
+		// did the multiply method of basis extraction work?
+		for( var j = 0; j < outBasis.length; j ++ ) {
+			ok( outBasis[j].equals( testBasis[j] ), "Passed!" );
+		}
+	}
+});
+
 test( "transpose", function() {
 	var a = new THREE.Matrix4();
 	var b = a.clone().transpose();
@@ -218,9 +247,9 @@ test( "transpose", function() {
 
 	b = new THREE.Matrix4().set( 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 );
 	var c = b.clone().transpose();
-	ok( ! matrixEquals4( b, c ), "Passed!" ); 
+	ok( ! matrixEquals4( b, c ), "Passed!" );
 	c.transpose();
-	ok( matrixEquals4( b, c ), "Passed!" ); 
+	ok( matrixEquals4( b, c ), "Passed!" );
 });
 
 test( "clone", function() {
@@ -283,7 +312,7 @@ test( "compose/decompose", function() {
 				m.decompose( t2, r2, s2 );
 
 				var m2 = new THREE.Matrix4().compose( t2, r2, s2 );
-			
+
 				var matrixIsSame = matrixEquals4( m, m2 );
 				/* debug code
 				if( ! matrixIsSame ) {

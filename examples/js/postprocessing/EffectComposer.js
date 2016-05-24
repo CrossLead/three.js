@@ -8,11 +8,14 @@ THREE.EffectComposer = function ( renderer, renderTarget ) {
 
 	if ( renderTarget === undefined ) {
 
-		var width = window.innerWidth || 1;
-		var height = window.innerHeight || 1;
-		var parameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
-
-		renderTarget = new THREE.WebGLRenderTarget( width, height, parameters );
+		var parameters = {
+			minFilter: THREE.LinearFilter,
+			magFilter: THREE.LinearFilter,
+			format: THREE.RGBAFormat,
+			stencilBuffer: false
+		};
+		var size = renderer.getSize();
+		renderTarget = new THREE.WebGLRenderTarget( size.width, size.height, parameters );
 
 	}
 
@@ -31,7 +34,7 @@ THREE.EffectComposer = function ( renderer, renderTarget ) {
 
 };
 
-THREE.EffectComposer.prototype = {
+Object.assign( THREE.EffectComposer.prototype, {
 
 	swapBuffers: function() {
 
@@ -44,6 +47,9 @@ THREE.EffectComposer.prototype = {
 	addPass: function ( pass ) {
 
 		this.passes.push( pass );
+
+		var size = this.renderer.getSize();
+		pass.setSize( size.width, size.height );
 
 	},
 
@@ -66,7 +72,7 @@ THREE.EffectComposer.prototype = {
 
 			pass = this.passes[ i ];
 
-			if ( !pass.enabled ) continue;
+			if ( ! pass.enabled ) continue;
 
 			pass.render( this.renderer, this.writeBuffer, this.readBuffer, delta, maskActive );
 
@@ -106,13 +112,15 @@ THREE.EffectComposer.prototype = {
 
 		if ( renderTarget === undefined ) {
 
-			renderTarget = this.renderTarget1.clone();
+			var size = this.renderer.getSize();
 
-			renderTarget.width = window.innerWidth;
-			renderTarget.height = window.innerHeight;
+			renderTarget = this.renderTarget1.clone();
+			renderTarget.setSize( size.width, size.height );
 
 		}
 
+		this.renderTarget1.dispose();
+		this.renderTarget2.dispose();
 		this.renderTarget1 = renderTarget;
 		this.renderTarget2 = renderTarget.clone();
 
@@ -123,13 +131,44 @@ THREE.EffectComposer.prototype = {
 
 	setSize: function ( width, height ) {
 
-		var renderTarget = this.renderTarget1.clone();
+		this.renderTarget1.setSize( width, height );
+		this.renderTarget2.setSize( width, height );
 
-		renderTarget.width = width;
-		renderTarget.height = height;
+		for ( var i = 0; i < this.passes.length; i ++ ) {
 
-		this.reset( renderTarget );
+			this.passes[i].setSize( width, height );
+
+		}
 
 	}
 
+} );
+
+
+THREE.Pass = function () {
+
+	// if set to true, the pass is processed by the composer
+	this.enabled = true;
+
+	// if set to true, the pass indicates to swap read and write buffer after rendering
+	this.needsSwap = true;
+
+	// if set to true, the pass clears its buffer before rendering
+	this.clear = false;
+
+	// if set to true, the result of the pass is rendered to screen
+	this.renderToScreen = false;
+
 };
+
+Object.assign( THREE.Pass.prototype, {
+
+	setSize: function( width, height ) {},
+
+	render: function ( renderer, writeBuffer, readBuffer, delta, maskActive ) {
+
+		console.error( "THREE.Pass: .render() must be implemented in derived pass." );
+
+	}
+
+} );

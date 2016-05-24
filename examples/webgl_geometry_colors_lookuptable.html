@@ -40,7 +40,7 @@
 
 		<div id="container"></div>
 
-		<script src="../build/three.min.js"></script>
+		<script src="../build/three.js"></script>
 		<script src="js/math/Lut.js"></script>
 		<script src="js/Detector.js"></script>
 		<script src="js/libs/stats.min.js"></script>
@@ -76,10 +76,7 @@
 				scene.add( camera );
 
 				stats = new Stats();
-				stats.domElement.style.position = 'absolute';
-				stats.domElement.style.bottom = '0px';
-				stats.domElement.style.zIndex = 100;
-				container.appendChild( stats.domElement );
+				container.appendChild( stats.dom );
 
 				// LIGHT
 				var ambientLight = new THREE.AmbientLight( 0x444444 );
@@ -105,14 +102,14 @@
 				scene.add( directionalLight );
 
 				renderer = new THREE.WebGLRenderer( { antialias: true } );
-				renderer.setClearColor(0xffffff, 1);
+				renderer.setClearColor( 0xffffff );
+				renderer.setPixelRatio( window.devicePixelRatio );
 				renderer.setSize(  window.innerWidth,  window.innerHeight );
-
 				container.appendChild( renderer.domElement );
 
 				window.addEventListener( 'resize', onWindowResize, false );
 
-				window.addEventListener( "keypress", onKeyPress, true);
+				window.addEventListener( "keydown", onKeyDown, true);
 
 			}
 
@@ -170,10 +167,7 @@
 					var material = new THREE.MeshLambertMaterial( {
 
 						side: THREE.DoubleSide,
-						specular: 0xF5F5F5,
 						color: 0xF5F5F5,
-						ambient : 0xFFFFFF,
-						shininess: 5,
 						vertexColors: THREE.VertexColors
 
 					} );
@@ -273,13 +267,13 @@
 			}
 
 
-			function onKeyPress ( e ) {
+			function onKeyDown ( e ) {
 
 				var maps = [ 'rainbow', 'cooltowarm', 'blackbody', 'grayscale' ];
 
 				var colorNumbers = ['16', '128', '256', '512' ];
 
-				if ( e.keyCode == 97 ) {
+				if ( e.keyCode == 65 ) {
 
 					cleanScene();
 
@@ -289,7 +283,7 @@
 
 					loadModel ( colorMap, numberOfColors, legendLayout );
 
-				} else if ( e.keyCode == 115 ) {
+				} else if ( e.keyCode == 83 ) {
 
 					cleanScene();
 
@@ -299,7 +293,7 @@
 
 					loadModel ( colorMap ,  numberOfColors, legendLayout );
 
-				} else if ( e.keyCode == 100 ) {
+				} else if ( e.keyCode == 68 ) {
 
 					if ( ! legendLayout ) {
 
@@ -319,7 +313,7 @@
 
 					}
 
-				} else if ( e.keyCode == 102 ) {
+				} else if ( e.keyCode == 70 ) {
 
 					cleanScene();
 
