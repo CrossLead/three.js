@@ -18486,6 +18486,7 @@ THREE.ImageLoader.prototype = {
 
 		scope.manager.itemStart( url );
 
+    if (url.match(/1162d/)) console.log('loading', url);
 		image.src = url;
 
 		return image;
@@ -21820,6 +21821,10 @@ THREE.SpriteMaterial = function ( parameters ) {
 
 	this.fog = false;
 	this.lights = false;
+
+  this.uniforms = null;
+  this.fragmentShader = null;
+  this.zOffset = 0;
 
 	this.setValues( parameters );
 
@@ -32544,7 +32549,6 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 	var gl = renderer.context;
 	var state = renderer.state;
-	var properties = renderer.properties;
 
   var vertexBuffer, elementBuffer;
 	var defaultProgram;
@@ -32622,7 +32626,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
       var fragmentShader = sprite.material.fragmentShader;
       if ( fragmentShader && !sprite.program ) {
 
-        sprite.program = resolveShader( fragmentShader, sprite.material.fragmentUniforms );
+        sprite.program = resolveShader( fragmentShader, sprite.material.uniforms );
 
       }
 
@@ -32661,29 +32665,25 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 		  gl.vertexAttribPointer( attributes.position, 2, gl.FLOAT, false, 2 * 8, 0 );
 		  gl.vertexAttribPointer( attributes.uv, 2, gl.FLOAT, false, 2 * 8, 8 );
 
-
-		  gl.uniformMatrix4fv( uniforms.projectionMatrix, false, camera.projectionMatrix.elements );
-
-		  gl.uniform1i( uniforms.map, 0 );
+      uniforms.setValue( gl, 'projectionMatrix', camera.projectionMatrix.elements );
+      uniforms.setValue( gl, 'map', 0 );
 
 		  if ( fog ) {
 
-			  gl.uniform3f( uniforms.fogColor, fog.color.r, fog.color.g, fog.color.b );
+        uniforms.setValue( gl, 'fogColor', fog.color );
 
 			  if ( fog instanceof THREE.Fog ) {
 
-				  gl.uniform1f( uniforms.fogNear, fog.near );
-				  gl.uniform1f( uniforms.fogFar, fog.far );
-
-				  gl.uniform1i( uniforms.fogType, 1 );
+          uniforms.setValue( gl, 'fogNear', fog.near );
+          uniforms.setValue( gl, 'fogFar', fog.far );
+          uniforms.setValue( gl, 'fogType', 1 );
 				  oldFogType = 1;
 				  sceneFogType = 1;
 
 			  } else if ( fog instanceof THREE.FogExp2 ) {
 
-				  gl.uniform1f( uniforms.fogDensity, fog.density );
-
-				  gl.uniform1i( uniforms.fogType, 2 );
+          uniforms.setValue( gl, 'fogDensity', fog.density );
+          uniforms.setValue( gl, 'fogType', 2 );
 				  oldFogType = 2;
 				  sceneFogType = 2;
 
@@ -32691,7 +32691,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 		  } else {
 
-			  gl.uniform1i( uniforms.fogType, 0 );
+        uniforms.setValue( gl, 'fogType', 0 );
 			  oldFogType = 0;
 			  sceneFogType = 0;
 
@@ -32717,12 +32717,17 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
         THREE.clearTextureUnits();
       }
 
-      var materialProperties = properties.get( material );
-      THREE.WebGLUniforms.upload(
-        gl, materialProperties.uniformsList, materialProperties.__webglShader.uniforms, renderer );
+      var uniforms = spriteProgram.uniforms,
+          fragmentUniformsList = spriteProgram.fragmentUniformsList;
 
-			gl.uniform1f( program.uniforms.alphaTest, material.alphaTest );
-			gl.uniformMatrix4fv( program.uniforms.modelViewMatrix, false, sprite.modelViewMatrix.elements );
+      if ( fragmentUniformsList ) {
+
+          THREE.WebGLUniforms.upload( gl, fragmentUniformsList, material.uniforms, renderer );
+
+      }
+
+      uniforms.setValue( gl, 'alphaTest', material.alphaTest );
+      uniforms.setValue( gl, 'modelViewMatrix', sprite.modelViewMatrix.elements );
 
 			sprite.matrixWorld.decompose( spritePosition, spriteRotation, spriteScale );
 
@@ -32739,37 +32744,36 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
 			if ( oldFogType !== fogType ) {
 
-				gl.uniform1i( program.uniforms.fogType, fogType );
+        uniforms.setValue( gl, 'fogType', fogType );
 				oldFogType = fogType;
 
 			}
 
 			if ( material.map !== null ) {
 
-				gl.uniform2f( program.uniforms.uvOffset, material.map.offset.x, material.map.offset.y );
-				gl.uniform2f( program.uniforms.uvScale, material.map.repeat.x, material.map.repeat.y );
+        uniforms.setValue( gl, 'uvOffset', material.map.offset );
+        uniforms.setValue( gl, 'uvScale', material.map.repeat );
 
 			} else {
 
-				gl.uniform2f( program.uniforms.uvOffset, 0, 0 );
-				gl.uniform2f( program.uniforms.uvScale, 1, 1 );
+        uniforms.setValue( gl, 'uvOffset', [ 0, 0 ]);
+        uniforms.setValue( gl, 'uvScale', [ 1, 1 ]);
 
 			}
 
-			gl.uniform1f( program.uniforms.opacity, material.opacity );
-			gl.uniform3f( program.uniforms.color, material.color.r, material.color.g, material.color.b );
+      uniforms.setValue( gl, 'opacity', material.opacity );
+      uniforms.setValue( gl, 'color', material.color );
 
-			gl.uniform1f( program.uniforms.rotation, material.rotation );
-			gl.uniform2fv( program.uniforms.scale, scale );
+      uniforms.setValue( gl, 'rotation', material.rotation );
+      uniforms.setValue( gl, 'scale', scale );
 
-      // TODO:  Is there another place we should put the zOffset rather than on the material like this ?
-			gl.uniform1f( program.uniforms.zOffset, sprite.material.zOffset || 0.0 );
+      uniforms.setValue( gl, 'zOffset', sprite.material.zOffset || 0.0 );
 
 			state.setBlending( material.blending, material.blendEquation, material.blendSrc, material.blendDst );
 			state.setDepthTest( material.depthTest );
 			state.setDepthWrite( material.depthWrite );
 
-      if ( !materialProperties.uniformsList.length ) {
+      if ( !fragmentUniformsList ) {
 
 			  if ( material.map ) {
 
@@ -32949,54 +32953,13 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 			uv:					      gl.getAttribLocation ( program, 'uv' )
 		};
 
-		this.uniforms = {
-			uvOffset:			    gl.getUniformLocation( program, 'uvOffset' ),
-			uvScale:			    gl.getUniformLocation( program, 'uvScale' ),
-
-			rotation:			    gl.getUniformLocation( program, 'rotation' ),
-			scale:				    gl.getUniformLocation( program, 'scale' ),
-
-			zOffset:			    gl.getUniformLocation( program, 'zOffset' ),
-
-			color:				    gl.getUniformLocation( program, 'color' ),
-			map:				      gl.getUniformLocation( program, 'map' ),
-			opacity:			    gl.getUniformLocation( program, 'opacity' ),
-
-			modelViewMatrix: 	gl.getUniformLocation( program, 'modelViewMatrix' ),
-			projectionMatrix:	gl.getUniformLocation( program, 'projectionMatrix' ),
-
-			fogType:			    gl.getUniformLocation( program, 'fogType' ),
-			fogDensity:		    gl.getUniformLocation( program, 'fogDensity' ),
-			fogNear:			    gl.getUniformLocation( program, 'fogNear' ),
-			fogFar:				    gl.getUniformLocation( program, 'fogFar' ),
-			fogColor:			    gl.getUniformLocation( program, 'fogColor' ),
-
-			alphaTest:		    gl.getUniformLocation( program, 'alphaTest' )
-		};
+    var uniforms = this.uniforms = new THREE.WebGLUniforms( gl, program, renderer );
 
     if ( fragmentUniforms ) {
 
-      for ( var u in fragmentUniforms ) {
-
-        this.uniforms[ u ] = gl.getUniformLocation( program, u );
-
-      }
+      this.fragmentUniformsList = THREE.WebGLUniforms.seqWithValue( uniforms.seq, fragmentUniforms );
 
     }
-
-    this.loadUniformsGeneric = function( fragmentUniforms ) {
-
-      var uniformsList = [];
-
-      for ( var u in fragmentUniforms ) {
-
-		    uniformsList.push( [ fragmentUniforms[ u ], this.uniforms[ u ] ] );
-
-      }
-
-      THREE.loadUniformsGeneric( uniformsList );
-
-    };
 
 		return this;
 	}

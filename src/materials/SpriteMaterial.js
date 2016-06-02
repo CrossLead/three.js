@@ -25,6 +25,10 @@ THREE.SpriteMaterial = function ( parameters ) {
 	this.fog = false;
 	this.lights = false;
 
+  this.uniforms = null;
+  this.fragmentShader = null;
+  this.zOffset = 0;
+
 	this.setValues( parameters );
 
 };
