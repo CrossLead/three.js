@@ -18486,7 +18486,6 @@ THREE.ImageLoader.prototype = {
 
 		scope.manager.itemStart( url );
 
-    if (url.match(/1162d/)) console.log('loading', url);
 		image.src = url;
 
 		return image;
@@ -32666,7 +32665,6 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 		  gl.vertexAttribPointer( attributes.uv, 2, gl.FLOAT, false, 2 * 8, 8 );
 
       uniforms.setValue( gl, 'projectionMatrix', camera.projectionMatrix.elements );
-      uniforms.setValue( gl, 'map', 0 );
 
 		  if ( fog ) {
 
@@ -32715,6 +32713,7 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
         program = spriteProgram;
         gl.useProgram( program.program );
         THREE.clearTextureUnits();
+
       }
 
       var uniforms = spriteProgram.uniforms,
@@ -32722,7 +32721,11 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
       if ( fragmentUniformsList ) {
 
-          THREE.WebGLUniforms.upload( gl, fragmentUniformsList, material.uniforms, renderer );
+        THREE.WebGLUniforms.upload( gl, fragmentUniformsList, material.uniforms, renderer );
+
+      } else {
+
+        uniforms.setValue( gl, 'map', 0 );
 
       }
 

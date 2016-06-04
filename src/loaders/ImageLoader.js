@@ -78,7 +78,6 @@ THREE.ImageLoader.prototype = {
 
 		scope.manager.itemStart( url );
 
-    if (url.match(/1162d/)) console.log('loading', url);
 		image.src = url;
 
 		return image;
