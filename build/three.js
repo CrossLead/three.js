@@ -32712,10 +32712,10 @@ THREE.SpritePlugin = function ( renderer, sprites ) {
 
         program = spriteProgram;
         gl.useProgram( program.program );
-        THREE.clearTextureUnits();
 
       }
 
+      THREE.clearTextureUnits();
       var uniforms = spriteProgram.uniforms,
           fragmentUniformsList = spriteProgram.fragmentUniformsList;
 
