@@ -1,12 +1,9 @@
-
-export = THREE;
-
 type THREE = {
   PlaneBufferGeometry: any;
+  REVISION: string;
 };
 
-module THREE {
-
+declare namespace THREE {
   export type Color = any;
 
   export type Camera = any;
@@ -35,18 +32,19 @@ module THREE {
   export type Vector3 = any;
 
   export type Object3D = {
-    position: Vector3D;
-    scale: Vector3D;
+    position: Vector3;
+    scale: Vector3;
     children: Object3D[];
     userData: any;
     visible?: boolean;
     material: Material;
 
     add(obj: Object3D): void;
-  }
+  };
 
   export type Uniforms = any;
 }
 
-export const THREE;
+declare const THREE;
 
+export = THREE;
